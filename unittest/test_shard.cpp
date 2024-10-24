@@ -73,9 +73,9 @@ TEST_CASE("tls::shard<> specification") {
 }
 
 TEST_CASE("tls::shard_retain<> specification") {
-	SECTION("preserves data") {
-		using retain = tls::shard_retain<unsigned>;
+	using retain = tls::shard_retain<unsigned>;
 
+	SECTION("preserves data") {
 		auto runner = [&](unsigned i) {
 			retain::local() = i;
 		};
@@ -93,5 +93,13 @@ TEST_CASE("tls::shard_retain<> specification") {
 		unsigned result = 0;
 		retain::for_each([&](unsigned i) { result += i; });
 		REQUIRE(result > 0u);
+	}
+
+	SECTION("removing dead data") {
+		retain::remove_dead_data();
+
+		unsigned result = 0;
+		retain::for_each([&](unsigned i) { result += i; });
+		REQUIRE(result == 0u);
 	}
 }

@@ -51,8 +51,8 @@ namespace tls {
 		}
 
 		static void remove_dead_data() {
-			std::erase_if(head, [](instance sd) {
-				return sd->it->second;
+			std::erase_if(head, [](shard_pair const& pair) {
+				return pair.second;
 			});
 		}
 
