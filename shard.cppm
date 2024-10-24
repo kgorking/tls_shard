@@ -17,21 +17,21 @@ namespace tls {
 		};
 
 		// the list of all shards
-		inline static std::forward_list<instance*> head{};
+		inline static std::forward_list<instance*> instances{};
 
 		// Mutex for serializing access when adding/removing/iterating shards
 		inline static std::shared_mutex mtx;
 
 		// Adds a new shard
-		static void add(instance* t) {
+		static void add(instance* i) {
 			std::unique_lock sl(mtx);
-			head.emplace_front(t);
+			instances.emplace_front(i);
 		}
 
 		// Removes a shard
-		static void remove(instance* t) {
+		static void remove(instance* i) {
 			std::unique_lock sl(mtx);
-			head.remove(t);
+			instances.remove(i);
 		}
 
 	public:
@@ -53,13 +53,13 @@ namespace tls {
 		static void for_each(std::invocable<T> auto&& fn) {
 			if constexpr (std::invocable<decltype(fn), T const&>) {
 				std::shared_lock sl(mtx);
-				for (instance* i : head) {
+				for (instance* i : instances) {
 					fn(std::as_const(i->data));
 				}
 			}
 			else {
 				std::unique_lock sl(mtx);
-				for (instance* i : head) {
+				for (instance* i : instances) {
 					fn(i->data);
 				}
 			}

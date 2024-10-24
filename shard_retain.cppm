@@ -16,9 +16,9 @@ namespace tls {
 		// This struct manages the instances that access the thread-local data.
 		// Its lifetime is marked as thread_local in shard::local(), which means that it can live longer than
 		// the shard<> instance that spawned it.
-		struct shard_data final {
-			shard_data() { shard_retain::add(this); }
-			~shard_data() { it->second = true; }
+		struct instance final {
+			instance() { shard_retain::add(this); }
+			~instance() { it->second = true; }
 
 			shard_iterator it;
 		};
@@ -30,10 +30,10 @@ namespace tls {
 		inline static std::shared_mutex mtx;
 
 		// Adds a new shard
-		static void add(shard_data* t) {
+		static void add(instance* i) {
 			std::unique_lock sl(mtx);
 			head.emplace_front(InitialValue, false);
-			t->it = head.begin();
+			i->it = head.begin();
 		}
 
 	public:
@@ -46,12 +46,12 @@ namespace tls {
 		// Get the thread-local variable
 		[[nodiscard]]
 		static T& local() {
-			thread_local shard_data var{};
+			thread_local instance var{};
 			return var.it->first;
 		}
 
 		static void remove_dead_data() {
-			std::erase_if(head, [](shard_data sd) {
+			std::erase_if(head, [](instance sd) {
 				return sd->it->second;
 			});
 		}
